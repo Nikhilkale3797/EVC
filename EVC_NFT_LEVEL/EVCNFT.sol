@@ -19,16 +19,8 @@ contract Avtars is Ownable, ERC721Enumerable {
     address public delegateAddress = 0xdD870fA1b7C4700F2BD7f44238821C26f7392148;
 
     uint256[8] public costs = [100 ether, 500 ether, 1000 ether, 2500 ether, 5000 ether, 10000 ether, 25000 ether, 50000 ether];
-
-    uint256 public LEVEL1_NFT = 10;
-    uint256 public LEVEL2_NFT = 10;
-    uint256 public LEVEL3_NFT = 10;
-    uint256 public LEVEL4_NFT = 10;
-    uint256 public LEVEL5_NFT = 10;
-    uint256 public LEVEL6_NFT = 10;
-    uint256 public LEVEL7_NFT = 10;
-    uint256 public LEVEL8_NFT = 10;
-
+    uint256[8] public NFT_Quantities = [10, 10, 10, 10, 10, 10, 10, 10];
+    
     uint256 public maxSupply = 113600;
     uint256 public maxMintAmount = 10;
 
@@ -39,16 +31,17 @@ contract Avtars is Ownable, ERC721Enumerable {
     bool public paused = false;
     bool public delegate = false;
 
-    mapping(address => bool) public _hasToken1;
-    mapping(address => bool) public _hasToken2;
-    mapping(address => bool) public _hasToken3;
-    mapping(address => bool) public _hasToken4;
-    mapping(address => bool) public _hasToken5;
-    mapping(address => bool) public _hasToken6;
-    mapping(address => bool) public _hasToken7;
-    mapping(address => bool) public _hasToken8;
+    // mapping(address => bool) public _hasToken1;
+    // mapping(address => bool) public _hasToken2;
+    // mapping(address => bool) public _hasToken3;
+    // mapping(address => bool) public _hasToken4;
+    // mapping(address => bool) public _hasToken5;
+    // mapping(address => bool) public _hasToken6;
+    // mapping(address => bool) public _hasToken7;
+    // mapping(address => bool) public _hasToken8;
 
     mapping(address => bool) public whitelisted;
+    uint256[] public NFTidArray;
 
 /////////////////////////
 
@@ -60,6 +53,8 @@ contract Avtars is Ownable, ERC721Enumerable {
     mapping(address => mapping(address => uint)) public userInvsetment;
     mapping(address => address[]) public upgradingRank;
     mapping(address => uint) public teamVloume;
+    mapping(address => bool)[8] public hasTokens;
+    mapping(address => mapping(address => uint)) public userInvestment;
 
     mapping(address => individualLevel) public individualLevelinfo;
     uint public rankTarget = 10000 ether ;
@@ -199,60 +194,93 @@ contract Avtars is Ownable, ERC721Enumerable {
     
 // }
 
-    function getTeamSaleVloume(address user) public view returns(uint){
-        uint totalInvestment = 0;
-        uint memberinvestment;
-        for (uint i=0; i<referrals[user].length; i++){
-           address member = referrals[user][i];
-           totalInvestment += userInvsetment[member][user];
-           if (referrals[member].length > 0){
-               memberinvestment = getTeamSaleVloume(member);
-             //  teamVloume[member] += memberinvestment;
-               totalInvestment += memberinvestment;}         
-    }
-
+    function getTeamSaleVolume(address user) public view returns(uint) {
+        uint totalInvestment = userInvestment[user][user];
+        for (uint i = 0; i < referrals[user].length; i++) {
+            address member = referrals[user][i];
+            totalInvestment += userInvestment[member][user];
+            if (referrals[member].length > 0) {
+                totalInvestment += getTeamSaleVolume(member);
+            }
+        }
         return totalInvestment;
-}
+    }
 
-    function rankupLifting(address _user)public {
+
+    function rankupLifting(address _user) public {
+        if (referralRank[_user] == 6) {
+            if (getTeamSaleVolume(_user) >= 700 && checkRank(_user) && hasTokens[6][_user]) {
+                referralRank[_user] = 7;
+            }
+        } else if (referralRank[_user] == 5) {
+            if (getTeamSaleVolume(_user) >= 600 && checkRank(_user) && hasTokens[5][_user]) {
+                referralRank[_user] = 6;
+            }
+        } else if (referralRank[_user] == 4) {
+            if (getTeamSaleVolume(_user) >= 500 && checkRank(_user) && hasTokens[4][_user]) {
+                referralRank[_user] = 5;
+            }
+        } else if (referralRank[_user] == 3) {
+            if (getTeamSaleVolume(_user) >= 400 && checkRank(_user) && hasTokens[3][_user]) {
+                referralRank[_user] = 4;
+            }
+        } else if (referralRank[_user] == 2) {
+            if (getTeamSaleVolume(_user) >= 300 && checkRank(_user) && hasTokens[2][_user]) {
+                referralRank[_user] = 3;
+            }
+        } else if (referralRank[_user] == 1) {
+            if (getTeamSaleVolume(_user) >= 200 && checkRank(_user) && hasTokens[1][_user]) {
+                referralRank[_user] = 2;
+            }
+        } else if (referralRank[_user] == 0) {
+            if (getTeamSaleVolume(_user) >= 100 && hasTokens[0][_user]) {
+                referralRank[_user] = 1;
+            }
+        }
+    }
+
+
+
+
+    // function rankupLifting(address _user)public {
         
-        if (referralRank[_user] == 6){
-            if (getTeamSaleVloume(_user)>=700 && checkRank(_user) && _hasToken7[_user]){
-            referralRank[_user] = 7;
-        }
-    }
-        else if(referralRank[_user] == 5){
-            if (getTeamSaleVloume(_user)>=600 && checkRank(_user) && _hasToken6[_user]){
-            referralRank[_user] = 6;
-        }
-    }
-        else if(referralRank[_user] == 4){
-            if (getTeamSaleVloume(_user)>=500 && checkRank(_user) && _hasToken5[_user]){
-            referralRank[_user] = 5;
-        }
-    }
-        else if(referralRank[_user] == 3){
-            if (getTeamSaleVloume(_user)>=400 && checkRank(_user) && _hasToken4[_user]){
-            referralRank[_user] = 4;
-        }
-    }
-         else if(referralRank[_user] == 2){
-             if (getTeamSaleVloume(_user)>=300 && checkRank(_user) && _hasToken3[_user]){
-            referralRank[_user] = 3;
-        }
-    }
-         else if(referralRank[_user] == 1){ 
-            if (getTeamSaleVloume(_user)>=200 && checkRank(_user) && _hasToken2[_user]){
-            referralRank[_user] = 2;
-        }
-    }
-         else if(referralRank[_user] == 0){
-            if (getTeamSaleVloume(_user)>=100  && _hasToken1[_user]){
-            referralRank[_user] = 1;
-        }
-    }
+    //     if (referralRank[_user] == 6){
+    //         if (getTeamSaleVolume(_user)>=700 && checkRank(_user) && _hasToken7[_user]){
+    //         referralRank[_user] = 7;
+    //     }
+    // }
+    //     else if(referralRank[_user] == 5){
+    //         if (getTeamSaleVolume(_user)>=600 && checkRank(_user) && _hasToken6[_user]){
+    //         referralRank[_user] = 6;
+    //     }
+    // }
+    //     else if(referralRank[_user] == 4){
+    //         if (getTeamSaleVolume(_user)>=500 && checkRank(_user) && _hasToken5[_user]){
+    //         referralRank[_user] = 5;
+    //     }
+    // }
+    //     else if(referralRank[_user] == 3){
+    //         if (getTeamSaleVolume(_user)>=400 && checkRank(_user) && _hasToken4[_user]){
+    //         referralRank[_user] = 4;
+    //     }
+    // }
+    //      else if(referralRank[_user] == 2){
+    //          if (getTeamSaleVolume(_user)>=300 && checkRank(_user) && _hasToken3[_user]){
+    //         referralRank[_user] = 3;
+    //     }
+    // }
+    //      else if(referralRank[_user] == 1){ 
+    //         if (getTeamSaleVolume(_user)>=200 && checkRank(_user) && _hasToken2[_user]){
+    //         referralRank[_user] = 2;
+    //     }
+    // }
+    //      else if(referralRank[_user] == 0){
+    //         if (getTeamSaleVolume(_user)>=100  && _hasToken1[_user]){
+    //         referralRank[_user] = 1;
+    //     }
+    // }
 
-    } 
+    // } 
 
    function checkRank(address _user) public view returns(bool){
        uint usercurrentrank= referralRank[_user];
@@ -288,24 +316,43 @@ contract Avtars is Ownable, ERC721Enumerable {
 
    }
 
-   function legSearch(address member, uint currentrank) internal view returns(bool){
-       bool found = false;
-       if(referrals[member].length > 0){
-           for(uint i = 0; i < referrals[member].length; i++){
-               if(referralRank[referrals[member][i]] >= currentrank){
-                   found = true;
-                   break;
-               }
-               if(referrals[referrals[member][i]].length > 0){
-                   found = legSearch(referrals[member][i], currentrank);
-               }
-               if(found == true){
-                   break;
-               }
-           }
-       }
-       return found;
-   }
+//    function legSearch(address member, uint currentrank) internal view returns(bool){
+//        bool found = false;
+//        if(referrals[member].length > 0){
+//            for(uint i = 0; i < referrals[member].length; i++){
+//                if(referralRank[referrals[member][i]] >= currentrank){
+//                    found = true;
+//                    break;
+//                }
+//                if(referrals[referrals[member][i]].length > 0){
+//                    found = legSearch(referrals[member][i], currentrank);
+//                }
+//                if(found == true){
+//                    break;
+//                }
+//            }
+//        }
+//        return found;
+//    }
+
+
+
+    function legSearch(address member, uint currentrank) internal view returns(bool) {
+        if (referrals[member].length == 0) {
+            return false;
+        }
+        for (uint i = 0; i < referrals[member].length; i++) {
+            address referrer = referrals[member][i];
+            if (referralRank[referrer] >= currentrank) {
+                return true;
+            }
+            if (legSearch(referrer, currentrank)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     function getTotalPartners(address _user) public view returns(uint){
        uint totalPartners;
@@ -325,16 +372,25 @@ contract Avtars is Ownable, ERC721Enumerable {
         address user = referrals[_user][i];
         uint userRank = referralRank[user];
         uint Totalpartner = getTotalPartners(user);
-        uint teamTurnover = getTeamSaleVloume(user);
+        uint teamTurnover = getTeamSaleVolume(user);
         string memory ownNFT;
-        if (_hasToken8[user]){ownNFT = "CryptoCap Tycoon";}
-        else if(_hasToken7[user]){ownNFT = "Bitcoin Billionaire";}
-        else if(_hasToken6[user]){ownNFT = "Blockchain Mogul";}
-        else if(_hasToken5[user]){ownNFT = "Crypto King";}
-        else if(_hasToken4[user]){ownNFT = "Crypto Investor";}
-        else if(_hasToken3[user]){ownNFT = "Crypto Entrepreneur";}
-        else if(_hasToken2[user]){ownNFT = "Crypto Enthusiast";}
-        else if(_hasToken1[user]){ownNFT = "Crypto Newbies";}
+            if (hasTokens[7][user]) {
+                ownNFT = "CryptoCap Tycoon";
+            } else if (hasTokens[6][user]) {
+                ownNFT = "Bitcoin Billionaire";
+            } else if (hasTokens[5][user]) {
+                ownNFT = "Blockchain Mogul";
+            } else if (hasTokens[4][user]) {
+                ownNFT = "Crypto King";
+            } else if (hasTokens[3][user]) {
+                ownNFT = "Crypto Investor";
+            } else if (hasTokens[2][user]) {
+                ownNFT = "Crypto Entrepreneur";
+            } else if (hasTokens[1][user]) {
+                ownNFT = "Crypto Enthusiast";
+            } else if (hasTokens[0][user]) {
+                ownNFT = "Crypto Newbies";
+            }
         teamStatistic memory teamStatisticsInfo = teamStatistic(user, userRank, Totalpartner, ownNFT, teamTurnover);
         teamStatisticsArray[i] = teamStatisticsInfo;
         }
@@ -362,356 +418,392 @@ contract Avtars is Ownable, ERC721Enumerable {
     }
 
     function setNftLevel(address _useradd, uint _level) public {
-        if(_level == 1){
-            _hasToken1[_useradd] = true;
+        if (_level == 1) {
+            hasTokens[0][_useradd] = true;
         }
-        if(_level == 2){
-            _hasToken2[_useradd] = true;
+        if (_level == 2) {
+            hasTokens[1][_useradd] = true;
         }
-        if(_level == 3){
-            _hasToken3[_useradd] = true;
+        if (_level == 3) {
+            hasTokens[2][_useradd] = true;
         }
-        if(_level == 4){
-            _hasToken4[_useradd] = true;
+        if (_level == 4) {
+            hasTokens[3][_useradd] = true;
         }
-        if(_level == 5){
-            _hasToken5[_useradd] = true;
+        if (_level == 5) {
+            hasTokens[4][_useradd] = true;
         }
-        if(_level == 6){
-            _hasToken6[_useradd] = true;
+        if (_level == 6) {
+            hasTokens[5][_useradd] = true;
         }
-        if(_level == 7){
-            _hasToken7[_useradd] = true;
+        if (_level == 7) {
+            hasTokens[6][_useradd] = true;
         }
-        if(_level == 8){
-            _hasToken8[_useradd] = true;
+        if (_level == 8) {
+            hasTokens[7][_useradd] = true;
         }
-
     }
 //////////////////
 
 
 
     //User
-    function mint_Level1_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
-        require(!_hasToken1[msg.sender], "You already have a Level 1 NFT!");
-        delegate = _delegate;
-        /////////////////////
-       // myReferrer[msg.sender] = _referrer;
-        setReferrer(_referrer);
-        
-        //////////////////////
-        uint256 supply = totalSupply();
-        require(!paused);
-        require(supply <= maxSupply);
-        require(totalSupplyOf_L1_NFT() < LEVEL1_NFT, "can't mint more than this level");
+
+
+    function mintNFT(uint _level, uint _mintPrice, bool _delegate, address _referrer) public {
+        uint level = _level - 1;
+        require(level >= 0 && level <= 7, "Invalid NFT level");
+        require(!hasTokens[level][msg.sender], "You already have an NFT of this level!");
+        require(!paused, "Minting is paused");
+        require(totalSupplyOfLevel(_level) < NFT_Quantities[level], "Cannot mint more NFTs of this level");
+        setReferrer(_referrer); // constant referrer
         if (msg.sender != owner()) {
-            if (whitelisted[msg.sender] != true) {
-                require(_mintPrice >= costs[0], "pay amount can't be low");
-                if (delegate == true) {
-                    uint _sharePrice = costs[0] * 10 / 100;
-                    uint _newmint = costs[0] + _sharePrice;
-                    require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
-                    uint _transfervalue = (_mintPrice - _sharePrice) - costs[0];
-                    uint sharetodelegate = _sharePrice + _transfervalue;
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[0]);
-                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+            if (!whitelisted[msg.sender]) {
+                uint requiredPrice = costs[level];
+                require(_mintPrice >= requiredPrice, "Insufficient payment amount");
+                if (_delegate == true) {
+                    uint sharePrice = requiredPrice * 10 / 100;
+                    uint newMintPrice = requiredPrice + sharePrice;
+                    require(_mintPrice >= newMintPrice, "Insufficient payment amount; if delegate is true, add 10% more.");
+                    uint256 transferValue = _mintPrice - requiredPrice - sharePrice;
+                    uint shareToDelegate = sharePrice + transferValue;
+                    IERC20(_token).safeTransferFrom(msg.sender, address(this), requiredPrice);
+                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, shareToDelegate);
                 } else {
                     IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
                 }
             }
         }
+        NFT_Counters[level].increment();
+        uint256 tokenId = NFT_Counters[level].current();
+        NFTidArray.push(tokenId);
+        userInvestment[msg.sender][_referrer] += _mintPrice;
+        _safeMint(msg.sender, tokenId);
+        hasTokens[level][msg.sender] = true;
+        // rankupLifting(msg.sender);
+        rankUpdate();
+    }
+
+
+    // function mint_Level1_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
+    //     require(!_hasToken1[msg.sender], "You already have a Level 1 NFT!");
+    //     delegate = _delegate;
+    //     /////////////////////
+    //    // myReferrer[msg.sender] = _referrer;
+    //     setReferrer(_referrer);
         
-        NFT_Counters[0].increment();
-        uint256 tokenId = NFT_Counters[0].current();
-        ///////////////////
-        userInvsetment[msg.sender][_referrer]+= _mintPrice; 
-        rankupLifting(_referrer);
-        // increment referral count of the referrer
-        // check if referrer's rank needs to be uplifted
-        // if (referralCount[_referrer] >= 3 && referralRank[_referrer] == 1) {
-        //     referralRank[_referrer] = 2;
-        // }
-        ///////////////////
-        _safeMint(msg.sender, tokenId);
-        _hasToken1[msg.sender] = true;
-    }
-
-
-
-    function mint_Level2_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
-        require(!_hasToken2[msg.sender], "You already have a Level 2 NFT!");
-        delegate = _delegate;
-        /////////////////////
-        //myReferrer[msg.sender] = _referrer;
-        setReferrer(_referrer);
+    //     //////////////////////
+    //     // uint256 supply = totalSupplyOfLevel(0);
+    //     require(!paused);
+    //     // require(supply <= maxSupply);
+    //     require(totalSupplyOfLevel(0) < NFT_Quantities[0], "can't mint more than this level");
+    //     if (msg.sender != owner()) {
+    //         if (whitelisted[msg.sender] != true) {
+    //             require(_mintPrice >= costs[0], "pay amount can't be low");
+    //             if (delegate == true) {
+    //                 uint _sharePrice = costs[0] * 10 / 100;
+    //                 uint _newmint = costs[0] + _sharePrice;
+    //                 require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
+    //                 uint _transfervalue = (_mintPrice - _sharePrice) - costs[0];
+    //                 uint sharetodelegate = _sharePrice + _transfervalue;
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[0]);
+    //                 IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+    //             } else {
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
+    //             }
+    //         }
+    //     }
         
-        //////////////////////
-        uint256 supply = totalSupply();
-        require(!paused);
-        require(supply <= maxSupply);
-        require(totalSupplyOf_L2_NFT() < LEVEL2_NFT, "can't mint more than this level");
-        if (msg.sender != owner()) {
-            if (whitelisted[msg.sender] != true) {
-                require(_mintPrice >= costs[1], "pay amount can't be low");
-                if (delegate == true) {
-                    uint _sharePrice = costs[1] * 10 / 100;
-                    uint _newmint = costs[1] + _sharePrice;
-                    require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
-                    uint _transfervalue = (_mintPrice - _sharePrice) - costs[1];
-                    uint sharetodelegate = _sharePrice + _transfervalue;
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[1]);
-                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
-                } else {
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
-                }
-            }
-        }
-        NFT_Counters[1].increment();
-        uint256 tokenId = NFT_Counters[1].current();
-         /////////////
-        userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
-        upLifting(_referrer);
-        ////////////
-        _safeMint(msg.sender, tokenId);
-        _hasToken2[msg.sender] = true;
-    }
+    //     NFT_Counters[0].increment();
+    //     uint256 tokenId = NFT_Counters[0].current();
+    //     ///////////////////
+    //     userInvsetment[msg.sender][_referrer]+= _mintPrice; 
+    //     rankupLifting(_referrer);
+    //     // increment referral count of the referrer
+    //     // check if referrer's rank needs to be uplifted
+    //     // if (referralCount[_referrer] >= 3 && referralRank[_referrer] == 1) {
+    //     //     referralRank[_referrer] = 2;
+    //     // }
+    //     ///////////////////
+    //     _safeMint(msg.sender, tokenId);
+    //     _hasToken1[msg.sender] = true;
+    // }
 
-    function mint_Level3_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
-        require(!_hasToken3[msg.sender], "You already have a Level 3 NFT!");
-        delegate = _delegate;
-        /////////////////////
-        //myReferrer[msg.sender] = _referrer;
-        setReferrer(_referrer);
+
+
+    // function mint_Level2_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
+    //     require(!_hasToken2[msg.sender], "You already have a Level 2 NFT!");
+    //     delegate = _delegate;
+    //     /////////////////////
+    //     //myReferrer[msg.sender] = _referrer;
+    //     setReferrer(_referrer);
         
-        //////////////////////
-        uint256 supply = totalSupply();
-        require(!paused);
-        require(supply <= maxSupply);
-        require(totalSupplyOf_L3_NFT() < LEVEL3_NFT, "can't mint more than this level");
-        if (msg.sender != owner()) {
-            if (whitelisted[msg.sender] != true) {
-                require(_mintPrice >= costs[2], "pay amount can't be low");
-                if (delegate == true) {
-                    uint _sharePrice = costs[2] * 10 / 100;
-                    uint _newmint = costs[2] + _sharePrice;
-                    require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
-                    uint _transfervalue = (_mintPrice - _sharePrice) - costs[2];
-                    uint sharetodelegate = _sharePrice + _transfervalue;
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[2]);
-                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
-                } else {
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
-                }
-            }
-        }
-        NFT_Counters[2].increment();
-        uint256 tokenId = NFT_Counters[2].current();
-         /////////////
-        userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
-        upLifting(_referrer);
+    //     //////////////////////
+    //     uint256 supply = totalSupply();
+    //     require(!paused);
+    //     require(supply <= maxSupply);
+    //     require(totalSupplyOfLevel(1) < NFT_Quantities[1], "can't mint more than this level");
+    //     if (msg.sender != owner()) {
+    //         if (whitelisted[msg.sender] != true) {
+    //             require(_mintPrice >= costs[1], "pay amount can't be low");
+    //             if (delegate == true) {
+    //                 uint _sharePrice = costs[1] * 10 / 100;
+    //                 uint _newmint = costs[1] + _sharePrice;
+    //                 require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
+    //                 uint _transfervalue = (_mintPrice - _sharePrice) - costs[1];
+    //                 uint sharetodelegate = _sharePrice + _transfervalue;
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[1]);
+    //                 IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+    //             } else {
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
+    //             }
+    //         }
+    //     }
+    //     NFT_Counters[1].increment();
+    //     uint256 tokenId = NFT_Counters[1].current();
+    //      /////////////
+    //     userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
+    //     upLifting(_referrer);
+    //     ////////////
+    //     _safeMint(msg.sender, tokenId);
+    //     _hasToken2[msg.sender] = true;
+    // }
 
-        ////////////
-        _safeMint(msg.sender, tokenId);
-        _hasToken3[msg.sender] = true;
-    }
-
-    function mint_Level4_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
-        require(!_hasToken4[msg.sender], "You already have a Level 4 NFT!");
-        delegate = _delegate;
-        /////////////////////
-        //myReferrer[msg.sender] = _referrer;
-        setReferrer(_referrer);
+    // function mint_Level3_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
+    //     require(!_hasToken3[msg.sender], "You already have a Level 3 NFT!");
+    //     delegate = _delegate;
+    //     /////////////////////
+    //     //myReferrer[msg.sender] = _referrer;
+    //     setReferrer(_referrer);
         
-        //////////////////////
-        uint256 supply = totalSupply();
-        require(!paused);
-        require(supply <= maxSupply);
-        require(totalSupplyOf_L4_NFT() < LEVEL4_NFT, "can't mint more than this level");
-        if (msg.sender != owner()) {
-            if (whitelisted[msg.sender] != true) {
-                require(_mintPrice >= costs[3], "pay amount can't be low");
-                if (delegate == true) {
-                    uint _sharePrice = costs[3] * 10 / 100;
-                    uint _newmint = costs[3] + _sharePrice;
-                    require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
-                    uint _transfervalue = (_mintPrice - _sharePrice) - costs[3];
-                    uint sharetodelegate = _sharePrice + _transfervalue;
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[3]);
-                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
-                } else {
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
-                }
-            }
-        }
-        NFT_Counters[3].increment();
-        uint256 tokenId = NFT_Counters[3].current();
-         /////////////
-        userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
-        upLifting(_referrer);
+    //     //////////////////////
+    //     uint256 supply = totalSupply();
+    //     require(!paused);
+    //     require(supply <= maxSupply);
+    //     require(totalSupplyOfLevel(2) < NFT_Quantities[2], "can't mint more than this level");
+    //     if (msg.sender != owner()) {
+    //         if (whitelisted[msg.sender] != true) {
+    //             require(_mintPrice >= costs[2], "pay amount can't be low");
+    //             if (delegate == true) {
+    //                 uint _sharePrice = costs[2] * 10 / 100;
+    //                 uint _newmint = costs[2] + _sharePrice;
+    //                 require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
+    //                 uint _transfervalue = (_mintPrice - _sharePrice) - costs[2];
+    //                 uint sharetodelegate = _sharePrice + _transfervalue;
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[2]);
+    //                 IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+    //             } else {
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
+    //             }
+    //         }
+    //     }
+    //     NFT_Counters[2].increment();
+    //     uint256 tokenId = NFT_Counters[2].current();
+    //      /////////////
+    //     userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
+    //     upLifting(_referrer);
 
-        ////////////
-        _safeMint(msg.sender, tokenId);
-        _hasToken4[msg.sender] = true;
-    }
+    //     ////////////
+    //     _safeMint(msg.sender, tokenId);
+    //     _hasToken3[msg.sender] = true;
+    // }
 
-    function mint_Level5_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
-        require(!_hasToken5[msg.sender], "You already have a Level 5 NFT!");
-        delegate = _delegate;
-        /////////////////////
-        //myReferrer[msg.sender] = _referrer;
-        setReferrer(_referrer);
+    // function mint_Level4_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
+    //     require(!_hasToken4[msg.sender], "You already have a Level 4 NFT!");
+    //     delegate = _delegate;
+    //     /////////////////////
+    //     //myReferrer[msg.sender] = _referrer;
+    //     setReferrer(_referrer);
         
-        //////////////////////
-        uint256 supply = totalSupply();
-        require(!paused);
-        require(supply <= maxSupply);
-        require(totalSupplyOf_L5_NFT() < LEVEL5_NFT, "can't mint more than this level");
-        if (msg.sender != owner()) {
-            if (whitelisted[msg.sender] != true) {
-                require(_mintPrice >= costs[4], "pay amount can't be low");
-                if (delegate == true) {
-                    uint _sharePrice = costs[4] * 10 / 100;
-                    uint _newmint = costs[4] + _sharePrice;
-                    require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
-                    uint _transfervalue = (_mintPrice - _sharePrice) - costs[4];
-                    uint sharetodelegate = _sharePrice + _transfervalue;
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[4]);
-                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
-                } else {
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
-                }
-            }
-        }
-        NFT_Counters[4].increment();
-        uint256 tokenId = NFT_Counters[4].current();
-         /////////////
-        userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
-        upLifting(_referrer);
+    //     //////////////////////
+    //     uint256 supply = totalSupply();
+    //     require(!paused);
+    //     require(supply <= maxSupply);
+    //     require(totalSupplyOfLevel(3) < NFT_Quantities[3], "can't mint more than this level");
+    //     if (msg.sender != owner()) {
+    //         if (whitelisted[msg.sender] != true) {
+    //             require(_mintPrice >= costs[3], "pay amount can't be low");
+    //             if (delegate == true) {
+    //                 uint _sharePrice = costs[3] * 10 / 100;
+    //                 uint _newmint = costs[3] + _sharePrice;
+    //                 require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
+    //                 uint _transfervalue = (_mintPrice - _sharePrice) - costs[3];
+    //                 uint sharetodelegate = _sharePrice + _transfervalue;
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[3]);
+    //                 IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+    //             } else {
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
+    //             }
+    //         }
+    //     }
+    //     NFT_Counters[3].increment();
+    //     uint256 tokenId = NFT_Counters[3].current();
+    //      /////////////
+    //     userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
+    //     upLifting(_referrer);
 
-        ////////////
-        _safeMint(msg.sender, tokenId);
-        _hasToken5[msg.sender] = true;
-    }
+    //     ////////////
+    //     _safeMint(msg.sender, tokenId);
+    //     _hasToken4[msg.sender] = true;
+    // }
 
-    function mint_Level6_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
-     //   require(!_hasToken6[msg.sender], "You already have a Level 6 NFT!");
-        delegate = _delegate;
-//////////
-       // myReferrer[msg.sender] = _referrer;
-        setReferrer(_referrer);
-
-//////////
-
-        uint256 supply = totalSupply();
-        require(!paused);
-        require(supply <= maxSupply);
-        require(totalSupplyOf_L6_NFT() < LEVEL6_NFT, "can't mint more than this level");
-        if (msg.sender != owner()) {
-            if (whitelisted[msg.sender] != true) {
-                require(_mintPrice >= costs[5], "pay amount can't be low");
-                if (delegate == true) {
-                    uint _sharePrice = costs[5] * 10 / 100;
-                    uint _newmint = costs[5] + _sharePrice;
-                    require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
-                    uint _transfervalue = (_mintPrice - _sharePrice) - costs[5];
-                    uint sharetodelegate = _sharePrice + _transfervalue;
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[5]);
-                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
-                } else {
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
-                }
-            }
-        }
-        NFT_Counters[5].increment();
-        uint256 tokenId = NFT_Counters[5].current();
-
-        /////////////
-        userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
-        upLifting(_referrer);
-
-        ////////////
-        _safeMint(msg.sender, tokenId);
-        _hasToken6[msg.sender] = true;
-    }
-
-    function mint_Level7_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
-       // require(!_hasToken7[msg.sender], "You already have a Level 7 NFT!");
-        delegate = _delegate;
-        /////////////////////
-        //myReferrer[msg.sender] = _referrer;
-        setReferrer(_referrer);
+    // function mint_Level5_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
+    //     require(!_hasToken5[msg.sender], "You already have a Level 5 NFT!");
+    //     delegate = _delegate;
+    //     /////////////////////
+    //     //myReferrer[msg.sender] = _referrer;
+    //     setReferrer(_referrer);
         
-        //////////////////////
-        uint256 supply = totalSupply();
-        require(!paused);
-        require(supply <= maxSupply);
-        require(totalSupplyOf_L7_NFT() < LEVEL7_NFT, "can't mint more than this level");
-        if (msg.sender != owner()) {
-            if (whitelisted[msg.sender] != true) {
-                require(_mintPrice >= costs[6], "pay amount can't be low");
-                if (delegate == true) {
-                    uint _sharePrice = costs[6] * 10 / 100;
-                    uint _newmint = costs[6] + _sharePrice;
-                    require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
-                    uint _transfervalue = (_mintPrice - _sharePrice) - costs[6];
-                    uint sharetodelegate = _sharePrice + _transfervalue;
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[6]);
-                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
-                } else {
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
-                }
-            }
-        }
-        NFT_Counters[6].increment();
-        uint256 tokenId = NFT_Counters[6].current();
-         /////////////
-        userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
-        upLifting(_referrer);
+    //     //////////////////////
+    //     uint256 supply = totalSupply();
+    //     require(!paused);
+    //     require(supply <= maxSupply);
+    //     require(totalSupplyOfLevel(4) < NFT_Quantities[4], "can't mint more than this level");
+    //     if (msg.sender != owner()) {
+    //         if (whitelisted[msg.sender] != true) {
+    //             require(_mintPrice >= costs[4], "pay amount can't be low");
+    //             if (delegate == true) {
+    //                 uint _sharePrice = costs[4] * 10 / 100;
+    //                 uint _newmint = costs[4] + _sharePrice;
+    //                 require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
+    //                 uint _transfervalue = (_mintPrice - _sharePrice) - costs[4];
+    //                 uint sharetodelegate = _sharePrice + _transfervalue;
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[4]);
+    //                 IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+    //             } else {
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
+    //             }
+    //         }
+    //     }
+    //     NFT_Counters[4].increment();
+    //     uint256 tokenId = NFT_Counters[4].current();
+    //      /////////////
+    //     userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
+    //     upLifting(_referrer);
 
-        ////////////
-        _safeMint(msg.sender, tokenId);
-        _hasToken7[msg.sender] = true;
-    }
+    //     ////////////
+    //     _safeMint(msg.sender, tokenId);
+    //     _hasToken5[msg.sender] = true;
+    // }
 
-    function mint_Level8_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
-        require(!_hasToken8[msg.sender], "You already have a Level 8 NFT!");
-        delegate = _delegate;
-        /////////////////////
-        //myReferrer[msg.sender] = _referrer;
-        setReferrer(_referrer);
+    // function mint_Level6_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
+    //  //   require(!_hasToken6[msg.sender], "You already have a Level 6 NFT!");
+    //     delegate = _delegate;
+    //  //////////
+    //    // myReferrer[msg.sender] = _referrer;
+    //     setReferrer(_referrer);
+
+    //  //////////
+
+    //     uint256 supply = totalSupply();
+    //     require(!paused);
+    //     require(supply <= maxSupply);
+    //     require(totalSupplyOfLevel(5) < NFT_Quantities[5], "can't mint more than this level");
+    //     if (msg.sender != owner()) {
+    //         if (whitelisted[msg.sender] != true) {
+    //             require(_mintPrice >= costs[5], "pay amount can't be low");
+    //             if (delegate == true) {
+    //                 uint _sharePrice = costs[5] * 10 / 100;
+    //                 uint _newmint = costs[5] + _sharePrice;
+    //                 require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
+    //                 uint _transfervalue = (_mintPrice - _sharePrice) - costs[5];
+    //                 uint sharetodelegate = _sharePrice + _transfervalue;
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[5]);
+    //                 IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+    //             } else {
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
+    //             }
+    //         }
+    //     }
+    //     NFT_Counters[5].increment();
+    //     uint256 tokenId = NFT_Counters[5].current();
+
+    //     /////////////
+    //     userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
+    //     upLifting(_referrer);
+
+    //     ////////////
+    //     _safeMint(msg.sender, tokenId);
+    //     _hasToken6[msg.sender] = true;
+    // }
+
+    // function mint_Level7_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
+    //    // require(!_hasToken7[msg.sender], "You already have a Level 7 NFT!");
+    //     delegate = _delegate;
+    //     /////////////////////
+    //     //myReferrer[msg.sender] = _referrer;
+    //     setReferrer(_referrer);
         
-        //////////////////////
-        uint256 supply = totalSupply();
-        require(!paused);
-        require(supply <= maxSupply);
-        require(totalSupplyOf_L8_NFT() < LEVEL8_NFT, "can't mint more than this level");
-        if (msg.sender != owner()) {
-            if (whitelisted[msg.sender] != true) {
-                require(_mintPrice >= costs[7], "pay amount can't be low");
-                if (delegate == true) {
-                    uint _sharePrice = costs[7] * 10 / 100;
-                    uint _newmint = costs[7] + _sharePrice;
-                    require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
-                    uint _transfervalue = (_mintPrice - _sharePrice) - costs[7];
-                    uint sharetodelegate = _sharePrice + _transfervalue;
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[7]);
-                    IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
-                } else {
-                    IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
-                }
-            }
-        }
-        NFT_Counters[7].increment();
-        uint256 tokenId = NFT_Counters[7].current();
-         /////////////
-        userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
-        upLifting(_referrer);
+    //     //////////////////////
+    //     uint256 supply = totalSupply();
+    //     require(!paused);
+    //     require(supply <= maxSupply);
+    //     require(totalSupplyOfLevel(6) < NFT_Quantities[6], "can't mint more than this level");
+    //     if (msg.sender != owner()) {
+    //         if (whitelisted[msg.sender] != true) {
+    //             require(_mintPrice >= costs[6], "pay amount can't be low");
+    //             if (delegate == true) {
+    //                 uint _sharePrice = costs[6] * 10 / 100;
+    //                 uint _newmint = costs[6] + _sharePrice;
+    //                 require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
+    //                 uint _transfervalue = (_mintPrice - _sharePrice) - costs[6];
+    //                 uint sharetodelegate = _sharePrice + _transfervalue;
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[6]);
+    //                 IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+    //             } else {
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
+    //             }
+    //         }
+    //     }
+    //     NFT_Counters[6].increment();
+    //     uint256 tokenId = NFT_Counters[6].current();
+    //      /////////////
+    //     userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
+    //     upLifting(_referrer);
 
-        ////////////
-        _safeMint(msg.sender, tokenId);
-        _hasToken8[msg.sender] = true;
-    }
+    //     ////////////
+    //     _safeMint(msg.sender, tokenId);
+    //     _hasToken7[msg.sender] = true;
+    // }
+
+    // function mint_Level8_NFT(uint _mintPrice, bool _delegate, address _referrer) public {
+    //     require(!_hasToken8[msg.sender], "You already have a Level 8 NFT!");
+    //     delegate = _delegate;
+    //     /////////////////////
+    //     //myReferrer[msg.sender] = _referrer;
+    //     setReferrer(_referrer);
+        
+    //     //////////////////////
+    //     uint256 supply = totalSupply();
+    //     require(!paused);
+    //     require(supply <= maxSupply);
+    //     require(totalSupplyOfLevel(7) < NFT_Quantities[7], "can't mint more than this level");
+    //     if (msg.sender != owner()) {
+    //         if (whitelisted[msg.sender] != true) {
+    //             require(_mintPrice >= costs[7], "pay amount can't be low");
+    //             if (delegate == true) {
+    //                 uint _sharePrice = costs[7] * 10 / 100;
+    //                 uint _newmint = costs[7] + _sharePrice;
+    //                 require(_mintPrice >= _newmint, "pay amount can't be low; if delegate is true, add 10% more.");
+    //                 uint _transfervalue = (_mintPrice - _sharePrice) - costs[7];
+    //                 uint sharetodelegate = _sharePrice + _transfervalue;
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), costs[7]);
+    //                 IERC20(_token).safeTransferFrom(msg.sender, delegateAddress, sharetodelegate);
+    //             } else {
+    //                 IERC20(_token).safeTransferFrom(msg.sender, address(this), _mintPrice);
+    //             }
+    //         }
+    //     }
+    //     NFT_Counters[7].increment();
+    //     uint256 tokenId = NFT_Counters[7].current();
+    //      /////////////
+    //     userInvsetment[msg.sender][_referrer]+= _mintPrice;       //
+    //     upLifting(_referrer);
+
+    //     ////////////
+    //     _safeMint(msg.sender, tokenId);
+    //     _hasToken8[msg.sender] = true;
+    // }
 
     //View
     function walletOfOwner(address _owner) public view returns(uint256[] memory) {
@@ -728,56 +820,89 @@ contract Avtars is Ownable, ERC721Enumerable {
         return string(abi.encodePacked(baseURI, tokenId.toString(), baseExtension));
     }
 
-    function totalSupplyOf_L1_NFT() public view returns(uint256) {
-        return NFT_Counters[0].current();
+    function totalSupplyOfLevel(uint256 _level) public view returns(uint256) {
+        uint level = _level - 1;
+        uint256 total = NFT_Counters[level].current();
+        if (level == 0) {
+            return total;
+        } else if (level == 1) {
+            return total - 20;
+        } else if (level == 2) {
+            return total - 30;
+        } else if (level == 3) {
+            return total - 40;
+        } else if (level == 4) {
+            return total - 50;
+        } else if (level == 5) {
+            return total - 60;
+        } else if (level == 6) {
+            return total - 70;
+        } else if (level == 7) {
+            return total - 80;
+        } else {
+            return total;
+        }
     }
 
-    function totalSupplyOf_L2_NFT() public view returns(uint256) {
-        uint256 total = NFT_Counters[1].current();
-        return (total - 20);
-    }
 
-    function totalSupplyOf_L3_NFT() public view returns(uint256) {
-        uint256 total = NFT_Counters[2].current();
-        return (total - 30);
-    }
 
-    function totalSupplyOf_L4_NFT() public view returns(uint256) {
-        uint256 total = NFT_Counters[3].current();
-        return (total - 40);
+    //Internal
+    function rankUpdate() internal {
+        for (uint i = 0; i < NFTidArray.length; i++) {
+            address owner = ERC721.ownerOf(NFTidArray[i]);
+            rankupLifting(owner);
+        }
     }
+    // function totalSupplyOf_L1_NFT() public view returns(uint256) {
+    //     return NFT_Counters[0].current();
+    // }
 
-    function totalSupplyOf_L5_NFT() public view returns(uint256) {
-        uint256 total = NFT_Counters[4].current();
-        return (total - 50);
-    }
+    // function totalSupplyOf_L2_NFT() public view returns(uint256) {
+    //     uint256 total = NFT_Counters[1].current();
+    //     return (total - 20);
+    // }
 
-    function totalSupplyOf_L6_NFT() public view returns(uint256) {
-        uint256 total =NFT_Counters[5].current();
-        return (total - 60);
-    }
+    // function totalSupplyOf_L3_NFT() public view returns(uint256) {
+    //     uint256 total = NFT_Counters[2].current();
+    //     return (total - 30);
+    // }
 
-    function totalSupplyOf_L7_NFT() public view returns(uint256) {
-        uint256 total = NFT_Counters[6].current();
-        return (total - 70);
-    }
+    // function totalSupplyOf_L4_NFT() public view returns(uint256) {
+    //     uint256 total = NFT_Counters[3].current();
+    //     return (total - 40);
+    // }
 
-    function totalSupplyOf_L8_NFT() public view returns(uint256) {
-        uint256 total = NFT_Counters[7].current();
-        return (total - 80);
-    }
+    // function totalSupplyOf_L5_NFT() public view returns(uint256) {
+    //     uint256 total = NFT_Counters[4].current();
+    //     return (total - 50);
+    // }
 
-    function totalSupply() public view override(ERC721Enumerable) returns(uint256) {
-        uint256 supplyOfLevel1 = totalSupplyOf_L1_NFT();
-        uint256 supplyOfLevel2 = totalSupplyOf_L2_NFT();
-        uint256 supplyOfLevel3 = totalSupplyOf_L3_NFT();
-        uint256 supplyOfLevel4 = totalSupplyOf_L4_NFT();
-        uint256 supplyOfLevel5 = totalSupplyOf_L5_NFT();
-        uint256 supplyOfLevel6 = totalSupplyOf_L6_NFT();
-        uint256 supplyOfLevel7 = totalSupplyOf_L7_NFT();
-        uint256 supplyOfLevel8 = totalSupplyOf_L8_NFT();
-        return (supplyOfLevel1 + supplyOfLevel2 + supplyOfLevel3 + supplyOfLevel4 + supplyOfLevel5 + supplyOfLevel6 + supplyOfLevel7 + supplyOfLevel8);
-    }
+    // function totalSupplyOf_L6_NFT() public view returns(uint256) {
+    //     uint256 total =NFT_Counters[5].current();
+    //     return (total - 60);
+    // }
+
+    // function totalSupplyOf_L7_NFT() public view returns(uint256) {
+    //     uint256 total = NFT_Counters[6].current();
+    //     return (total - 70);
+    // }
+
+    // function totalSupplyOf_L8_NFT() public view returns(uint256) {
+    //     uint256 total = NFT_Counters[7].current();
+    //     return (total - 80);
+    // }
+
+    // function totalSupply() public view override(ERC721Enumerable) returns(uint256) {
+    //     uint256 supplyOfLevel1 = totalSupplyOf_L1_NFT();
+    //     uint256 supplyOfLevel2 = totalSupplyOf_L2_NFT();
+    //     uint256 supplyOfLevel3 = totalSupplyOf_L3_NFT();
+    //     uint256 supplyOfLevel4 = totalSupplyOf_L4_NFT();
+    //     uint256 supplyOfLevel5 = totalSupplyOf_L5_NFT();
+    //     uint256 supplyOfLevel6 = totalSupplyOf_L6_NFT();
+    //     uint256 supplyOfLevel7 = totalSupplyOf_L7_NFT();
+    //     uint256 supplyOfLevel8 = totalSupplyOf_L8_NFT();
+    //     return (supplyOfLevel1 + supplyOfLevel2 + supplyOfLevel3 + supplyOfLevel4 + supplyOfLevel5 + supplyOfLevel6 + supplyOfLevel7 + supplyOfLevel8);
+    // }
 
     function getMyReferrer(address _user) public view returns(address){
         return myReferrer[_user];
