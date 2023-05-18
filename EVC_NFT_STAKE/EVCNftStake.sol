@@ -28,7 +28,7 @@ interface NFT {
 
 }
 
-//NFT Stake Contract
+//NFT Stake Contract.
 contract StakeNFT is Pausable, Ownable, ReentrancyGuard {
 
     Token erc20Token;
