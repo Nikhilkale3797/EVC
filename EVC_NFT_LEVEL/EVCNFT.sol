@@ -110,7 +110,8 @@ contract Avtars is Ownable, ERC721Enumerable {
         if (myReferrer[msg.sender]==address(0)){
         require(referrer != msg.sender, "Cannot refer yourself");
         myReferrer[msg.sender] = referrer;
-        referrals[referrer].push(msg.sender);}
+        referrals[referrer].push(msg.sender);
+        referralCount[referrer]++;}
         else if(myReferrer[msg.sender]!=address(0)){
             require(myReferrer[msg.sender]==referrer,"fill correct reffral address");
         }
@@ -351,6 +352,12 @@ contract Avtars is Ownable, ERC721Enumerable {
             }
         }
         return false;
+    }
+
+
+    function getNFTCost(uint _level) public view returns(uint){
+        uint level = _level - 1;
+        return costs[level];
     }
 
 
